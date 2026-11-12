@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Jogo de Reflexo — Tela</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=VT323&display=swap">
+<style>
+  :root{
+    --bg-stage:#12141c;
+    --cabinet:#241611;
+    --cabinet-edge:#160d09;
+    --trim:#ffb703;
+    --mound:#3f6b34;
+    --mound-dark:#28421f;
+    --mole:#a06a42;
+    --mole-dark:#7c4f30;
+    --mole-belly:#d8a978;
+    --board-bg:#0c0e13;
+    --board-text:#ffcf5c;
+    --board-text-dim:#5c4a25;
+    --miss:#e0524a;
+    --hit:#ffd23f;
+    --ink:#f2e8d8;
+    --ink-dim:#c9bda8;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box;}
+  html{ scroll-padding-top:env(safe-area-inset-top,0px); }
+  body{
+    margin:0;
+    min-height:100vh;
+    background:radial-gradient(ellipse at 50% -10%, #1c2030 0%, var(--bg-stage) 55%);
+    background-color:var(--bg-stage);
+    color:var(--ink);
+    font-family:'Baloo 2', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:calc(32px + env(safe-area-inset-top,0px)) 16px calc(32px + env(safe-area-inset-bottom,0px));
+  }
+  .cabinet{
+    width:100%;
+    max-width:640px;
+    background:linear-gradient(180deg, var(--cabinet) 0%, #1c110c 100%);
+    border-radius:22px;
+    border:3px solid var(--cabinet-edge);
+    box-shadow:0 30px 60px rgba(0,0,0,.55), inset 0 0 0 6px rgba(255,183,3,.06);
+    padding:22px 22px 26px;
+    position:relative;
+    overflow:hidden;
+  }
+  .cabinet::before{
+    content:"";
+    position:absolute;
+    top:14px; left:22px; right:22px;
+    height:6px;
+    background-image:radial-gradient(circle, var(--trim) 0 2.5px, transparent 3px);
+    background-size:22px 6px;
+    opacity:.85;
+  }
+  header{ text-align:center; padding-top:16px; margin-bottom:14px; }
+  h1{
+    margin:0;
+    font-size:clamp(26px,6vw,34px);
+    font-weight:800;
+    letter-spacing:.5px;
+    color:var(--trim);
+    text-shadow:0 2px 0 #7a4a00, 0 6px 14px rgba(255,183,3,.25);
+  }
+  .subtitle{ margin:4px 0 0; font-size:14px; color:var(--ink-dim); }
+  .connect-row{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:14px; }
+  button{
+    font-family:inherit;
+    font-weight:700;
+    font-size:15px;
+    border:none;
+    border-radius:12px;
+    padding:10px 20px;
+    cursor:pointer;
+    background:var(--trim);
+    color:#3a2200;
+    box-shadow:0 4px 0 #b57e00;
+    transition:transform .08s ease;
+  }
+  button:active{ transform:translateY(3px); box-shadow:0 1px 0 #b57e00; }
+  button:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; }
+  button.secondary{ background:#3a2c22; color:var(--ink); box-shadow:0 4px 0 #1c130d; }
+  .status-dot{
+    width:11px; height:11px; border-radius:50%;
+    background:#6b6f7d;
+    box-shadow:0 0 0 3px rgba(255,255,255,.05);
+  }
+  .status-dot.on{ background:#4fd67a; box-shadow:0 0 10px #4fd67a; }
+  .status-dot.off{ background:var(--miss); box-shadow:0 0 10px var(--miss); }
+
+  .scoreboard{ display:flex; gap:12px; margin:18px 0 6px; }
+  .board{
+    flex:1;
+    background:var(--board-bg);
+    border-radius:12px;
+    padding:10px 14px;
+    text-align:center;
+    box-shadow:inset 0 0 0 2px #000, inset 0 0 18px rgba(0,0,0,.6);
+  }
+  .board .label{ font-size:12px; color:var(--ink-dim); letter-spacing:.5px; margin-bottom:2px; }
+  .board .digits{
+    font-family:'VT323', ui-monospace, monospace;
+    font-size:46px;
+    line-height:1;
+    color:var(--board-text-dim);
+    transition:color .15s, text-shadow .15s;
+  }
+  .board .digits.lit{ color:var(--board-text); text-shadow:0 0 10px rgba(255,207,92,.55); }
+  .board.time.low .digits.lit{ color:var(--miss); text-shadow:0 0 12px rgba(224,82,74,.7); }
+
+  .field{
+    background:linear-gradient(180deg,#1a2a17 0%, var(--mound-dark) 100%);
+    border-radius:16px;
+    padding:22px 10px 0;
+    display:flex;
+    justify-content:space-around;
+    align-items:flex-end;
+    height:190px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:inset 0 8px 18px rgba(0,0,0,.35);
+  }
+  .hole{
+    position:relative;
+    width:30%;
+    max-width:150px;
+    height:150px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+  }
+  .mound{
+    position:absolute;
+    bottom:0; left:50%;
+    transform:translateX(-50%);
+    width:100%;
+    height:58px;
+    background:radial-gradient(ellipse at 50% 100%, var(--mound) 0%, var(--mound-dark) 90%);
+    border-radius:50% 50% 20px 20px / 60% 60% 20px 20px;
+    z-index:3;
+  }
+  .pit{
+    position:absolute;
+    bottom:6px; left:50%;
+    transform:translateX(-50%);
+    width:70%;
+    height:22px;
+    background:#0a0f08;
+    border-radius:50%;
+    z-index:1;
+  }
+  .mole{
+    position:absolute;
+    bottom:-70px;
+    left:50%;
+    transform:translateX(-50%);
+    width:74px;
+    height:90px;
+    z-index:2;
+    transition:bottom .16s cubic-bezier(.34,1.56,.64,1);
+  }
+  .mole .head{
+    position:absolute;
+    top:0; left:50%;
+    transform:translateX(-50%);
+    width:74px; height:68px;
+    background:radial-gradient(circle at 35% 30%, var(--mole) 0%, var(--mole-dark) 100%);
+    border-radius:50% 50% 46% 46%;
+  }
+  .mole .ear{ position:absolute; top:-6px; width:20px; height:20px; background:var(--mole-dark); border-radius:50%; }
+  .mole .ear.l{ left:2px; } .mole .ear.r{ right:2px; }
+  .mole .cheek{ position:absolute; top:34px; width:20px; height:14px; background:var(--mole-belly); border-radius:50%; opacity:.8; }
+  .mole .cheek.l{ left:4px; } .mole .cheek.r{ right:4px; }
+  .mole .eye{ position:absolute; top:26px; width:8px; height:8px; background:#1a1108; border-radius:50%; }
+  .mole .eye.l{ left:20px; } .mole .eye.r{ right:20px; }
+  .mole .nose{ position:absolute; top:40px; left:50%; transform:translateX(-50%); width:14px; height:10px; background:#3a2214; border-radius:50%; }
+
+  .hole.active .mole{ bottom:8px; }
+  .hole.hit .mole .head{ background:radial-gradient(circle at 35% 30%, var(--hit) 0%, #c78f00 100%); }
+  .hole.miss .mole{ bottom:-70px; transition-duration:.25s; }
+  .hole.shake{ animation:shake .3s; }
+  @keyframes shake{ 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
+
+  .popup{
+    position:absolute;
+    top:-6px; left:50%;
+    transform:translateX(-50%);
+    font-family:'VT323', ui-monospace, monospace;
+    font-size:22px;
+    color:var(--hit);
+    text-shadow:0 0 8px rgba(255,210,63,.7);
+    opacity:0;
+    pointer-events:none;
+    z-index:4;
+  }
+  .popup.show{ animation:float-up .8s ease-out forwards; }
+  @keyframes float-up{ 0%{ opacity:1; transform:translate(-50%,0); } 100%{ opacity:0; transform:translate(-50%,-34px); } }
+
+  .message{
+    margin-top:16px;
+    min-height:54px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:8px 12px;
+    border-radius:12px;
+    background:rgba(0,0,0,.25);
+  }
+  .message .line1{ font-size:20px; font-weight:700; }
+  .message .line1.countdown{ font-family:'VT323', ui-monospace, monospace; font-size:48px; color:var(--trim); }
+  .message.ok .line1{ color:var(--hit); }
+  .message.bad .line1{ color:var(--miss); }
+  .message.info .line1{ color:var(--ink-dim); font-weight:600; font-size:16px; }
+
+  footer{ margin-top:14px; text-align:center; font-size:12px; color:var(--ink-dim); line-height:1.5; }
+  footer code{ background:rgba(255,255,255,.08); padding:1px 6px; border-radius:6px; }
+</style>
+</head>
+<body>
+
+<div class="cabinet">
+  <header>
+    <h1>Jogo de Reflexo</h1>
+    <p class="subtitle">a toupeira certa, no botão certo, antes do tempo acabar</p>
+    <div class="connect-row">
+      <span class="status-dot off" id="statusDot"></span>
+      <button id="btnConnect">Conectar ao Arduino</button>
+      <button id="btnDisconnect" class="secondary" style="display:none;">Desconectar</button>
+    </div>
+  </header>
+
+  <div class="scoreboard">
+    <div class="board score">
+      <div class="label">Pontos</div>
+      <div class="digits" id="scoreDigits">000</div>
+    </div>
+    <div class="board time">
+      <div class="label">Tempo</div>
+      <div class="digits" id="timeDigits">30</div>
+    </div>
+  </div>
+
+  <div class="field" id="field"></div>
+
+  <div class="message info" id="message">
+    <div class="line1" id="messageLine">Conecte o Arduino e aperte um botão físico para começar</div>
+  </div>
+
+  <footer>
+    Funciona no Chrome ou Edge (Web Serial). Velocidade da porta: <code>115200</code> — precisa bater com o <code>Serial.begin()</code> do sketch.<br>
+    Pra jogar de novo depois do fim de jogo, aperte um botão físico no Arduino — o recomeço é sempre pelo hardware.
+  </footer>
+</div>
+
+<script>
+(function(){
+  const btnConnect = document.getElementById('btnConnect');
+  const btnDisconnect = document.getElementById('btnDisconnect');
+  const statusDot = document.getElementById('statusDot');
+  const scoreDigits = document.getElementById('scoreDigits');
+  const timeDigits = document.getElementById('timeDigits');
+  const timeBoard = document.querySelector('.board.time');
+  const field = document.getElementById('field');
+  const message = document.getElementById('message');
+  const messageLine = document.getElementById('messageLine');
+
+  // monta as 3 tocas
+  for (let i = 0; i < 3; i++){
+    const hole = document.createElement('div');
+    hole.className = 'hole';
+    hole.dataset.index = i;
+    hole.innerHTML =
+      '<div class="pit"></div><div class="mound"></div>' +
+      '<div class="mole"><div class="popup" id="popup'+i+'"></div>' +
+      '<div class="head"><div class="ear l"></div><div class="ear r"></div>' +
+      '<div class="cheek l"></div><div class="cheek r"></div>' +
+      '<div class="eye l"></div><div class="eye r"></div><div class="nose"></div></div></div>';
+    field.appendChild(hole);
+  }
+  const holes = [0,1,2].map(i => document.querySelector('.hole[data-index="'+i+'"]'));
+  const popups = [0,1,2].map(i => document.getElementById('popup'+i));
+
+  let port, reader, keepReading = false;
+  let lastActiveLed = -1;
+
+  function setMessage(text, kind, big){
+    message.className = 'message' + (kind ? ' ' + kind : '');
+    messageLine.className = 'line1' + (big ? ' countdown' : '');
+    messageLine.textContent = text;
+  }
+
+  function setLed(ledIndex){
+    holes.forEach((h, i) => {
+      h.classList.toggle('active', i === ledIndex);
+      h.classList.remove('hit','miss');
+    });
+    if (ledIndex >= 0) lastActiveLed = ledIndex;
+  }
+
+  function flashHit(points){
+    if (lastActiveLed < 0) return;
+    const h = holes[lastActiveLed];
+    h.classList.add('hit');
+    const p = popups[lastActiveLed];
+    p.textContent = '+' + points;
+    p.classList.remove('show'); void p.offsetWidth; p.classList.add('show');
+    setTimeout(() => h.classList.remove('active','hit'), 180);
+  }
+
+  function flashMiss(){
+    if (lastActiveLed < 0) return;
+    const h = holes[lastActiveLed];
+    h.classList.add('shake');
+    setTimeout(() => h.classList.remove('shake'), 300);
+  }
+
+  function flashTimeout(){
+    if (lastActiveLed < 0) return;
+    const h = holes[lastActiveLed];
+    h.classList.add('miss');
+    setTimeout(() => h.classList.remove('active','miss'), 250);
+  }
+
+  function parseKV(rest){
+    const out = {};
+    rest.trim().split(/\s+/).forEach(pair => {
+      if (!pair) return;
+      const [k, v] = pair.split('=');
+      out[k] = v;
+    });
+    return out;
+  }
+
+  function handleLine(line){
+    if (!line) return;
+    const spaceIdx = line.indexOf(' ');
+    const cmd = spaceIdx === -1 ? line : line.slice(0, spaceIdx);
+    const rest = spaceIdx === -1 ? '' : line.slice(spaceIdx + 1);
+
+    if (cmd === 'TICK'){
+      const kv = parseKV(rest);
+      const score = parseInt(kv.score || '0', 10);
+      const time = parseInt(kv.time || '0', 10);
+      const led = parseInt(kv.led !== undefined ? kv.led : '-1', 10);
+
+      scoreDigits.textContent = String(score).padStart(3,'0');
+      scoreDigits.classList.add('lit');
+      timeDigits.textContent = String(time);
+      timeDigits.classList.toggle('lit', kv.state === 'PLAYING');
+      timeBoard.classList.toggle('low', kv.state === 'PLAYING' && time <= 5);
+
+      if (kv.state === 'PLAYING'){
+        setLed(led);
+      } else if (kv.state === 'IDLE'){
+        setLed(-1);
+      }
+      return;
+    }
+
+    if (cmd === 'EVENT'){
+      if (rest === 'IDLE'){
+        setLed(-1);
+        scoreDigits.textContent = '000';
+        scoreDigits.classList.remove('lit');
+        timeDigits.textContent = '30';
+        timeDigits.classList.remove('lit');
+        setMessage('Aperte um botão físico para começar', 'info');
+      }
+      return;
+    }
+
+    if (cmd === 'COUNTDOWN'){
+      const kv = parseKV(rest);
+      setMessage(kv.n, null, true);
+      return;
+    }
+
+    if (cmd === 'GO'){
+      setMessage('VAI!', 'ok', true);
+      return;
+    }
+
+    if (cmd === 'HIT'){
+      const kv = parseKV(rest);
+      const pts = parseInt(kv.points || '0', 10);
+      flashHit(pts);
+      setMessage('Acertou! +' + pts + ' pontos', 'ok');
+      return;
+    }
+
+    if (cmd === 'MISS'){
+      flashMiss();
+      setMessage('Toupeira errada! -5 pontos', 'bad');
+      return;
+    }
+
+    if (cmd === 'TIMEOUT'){
+      flashTimeout();
+      setMessage('Muito lento! 0 pontos', 'bad');
+      return;
+    }
+
+    if (cmd === 'GAMEOVER'){
+      const kv = parseKV(rest);
+      setLed(-1);
+      setMessage('Fim de jogo — ' + (kv.score || '0') + ' pontos! Aperte um botão para jogar de novo', 'info');
+      return;
+    }
+  }
+
+  async function connect(){
+    if (!('serial' in navigator)){
+      setMessage('Este navegador não suporta Web Serial (ou a página está em um iframe). Abra o link direto no Chrome ou Edge.', 'bad');
+      return;
+    }
+    try{
+      port = await navigator.serial.requestPort();
+      await port.open({ baudRate: 115200 });
+      statusDot.classList.remove('off');
+      statusDot.classList.add('on');
+      btnConnect.style.display = 'none';
+      btnDisconnect.style.display = 'inline-block';
+      setMessage('Conectado! Aperte um botão físico para começar', 'info');
+
+      keepReading = true;
+      const textDecoder = new TextDecoderStream();
+      port.readable.pipeTo(textDecoder.writable).catch(() => {});
+      reader = textDecoder.readable.getReader();
+
+      let buffer = '';
+      while (keepReading){
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += value;
+        let idx;
+        while ((idx = buffer.indexOf('\n')) >= 0){
+          const line = buffer.slice(0, idx).trim();
+          buffer = buffer.slice(idx + 1);
+          handleLine(line);
+        }
+      }
+    } catch (err){
+      setMessage('Não deu pra conectar: ' + err.message, 'bad');
+      statusDot.classList.remove('on');
+      statusDot.classList.add('off');
+    }
+  }
+
+  async function disconnect(){
+    keepReading = false;
+    try{ if (reader) { await reader.cancel(); reader.releaseLock(); } } catch(e){}
+    try{ if (port) await port.close(); } catch(e){}
+    statusDot.classList.remove('on');
+    statusDot.classList.add('off');
+    btnConnect.style.display = 'inline-block';
+    btnDisconnect.style.display = 'none';
+    setMessage('Desconectado', 'info');
+  }
+
+  btnConnect.addEventListener('click', connect);
+  btnDisconnect.addEventListener('click', disconnect);
+})();
+</script>
+
+</body>
+</html>
